@@ -5,59 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RailSplit Games - Unique Interactive Experiences</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="#home">Home</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#games">Games</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
+    <div class="background-image"></div>
+    <nav>
+        <div class="logo">
+            <img src="Logo.png" alt="RailSplit Games Logo">
+        </div>
+        <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#games">Games</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+        <div class="burger">
+            <div class="line1"></div>
+            <div class="line2"></div>
+            <div class="line3"></div>
+        </div>
+    </nav>
 
     <main>
         <section id="home" class="hero">
-            <div class="container">
-                <h1>RailSplit Games</h1>
-                <p class="tagline">Delivering Unique Interactive Experiences</p>
-                <a href="#games" class="cta-button">Explore Our Games</a>
-            </div>
+            <h1>RailSplit Games</h1>
+            <p>Delivering Unique Interactive Experiences</p>
+            <a href="#games" class="cta-button">Explore Our Games</a>
         </section>
 
-        <section id="about" class="about">
-            <div class="container">
-                <h2>About Us</h2>
-                <p>At RailSplit Games, we're passionate about creating innovative and engaging gaming experiences that push the boundaries of interactive entertainment.</p>
-            </div>
+        <section id="about" class="panel">
+            <h2>About Us</h2>
+            <p>At RailSplit Games, we're passionate about creating innovative and engaging gaming experiences that push the boundaries of interactive entertainment. Inspired by non-linear storytelling, vast worlds, and the spirit of adventure, we create unique gaming experiences for the world.</p>
         </section>
 
-        <section id="games" class="games">
-            <div class="container">
-                <h2>Our Games</h2>
-                <div class="game-grid">
-                    <div class="game-card">Game 1</div>
-                    <div class="game-card">Game 2</div>
-                    <div class="game-card">Game 3</div>
+        <section id="games" class="panel">
+            <h2>Our Games</h2>
+            <div class="game-showcase">
+                <div class="game-card">
+                    <h3>Game Title</h3>
+                    <p>From Tailgrabs to Time Travel, our game is an exciting 3rd Person Skateboarding Adventure Game.</p>
+                    <div class="game-images">
+                        <img src="knight-3.webp" alt="Knight 3" class="game-image main-image">
+                        <div class="secondary-images">
+                            <img src="knight-1.webp" alt="Knight 1" class="game-image">
+                            <img src="knight-2.webp" alt="Knight 2" class="game-image">
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section id="contact" class="contact">
-            <div class="container">
-                <h2>Contact Us</h2>
-                <p>Get in touch with us for collaborations or inquiries.</p>
-                <a href="mailto:info@railsplitgames.com" class="cta-button">Email Us</a>
+        <section id="contact" class="panel">
+            <h2>Contact Us</h2>
+            <div class="form-container">
+                <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScQlLpyuQzoff8x7kV0maGrO2jBjCOstc2on5YSRC2da-49Hw/viewform?embedded=true" width="640" height="704" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
             </div>
         </section>
     </main>
 
     <footer>
-        <div class="container">
-            <p>&copy; 2023 RailSplit Games. All rights reserved.</p>
-        </div>
+        <p>&copy; 2023 RailSplit Games. All rights reserved.</p>
     </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>
