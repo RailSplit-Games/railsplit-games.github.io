@@ -37,50 +37,35 @@ body {
 
 /* ... (keep the existing CSS until the game-card rule) ... */
 
+.game-showcase {
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
 .game-card {
+    flex: 1;
+    max-width: 36%; /* Adjusted to fit three boxes */
     background-color: var(--primary-color);
     padding: 1.5rem;
     border-radius: 5px;
-    max-width: 1000px;
-    width: 100%;
-    margin: 0 auto;
+    text-align: center;
 }
 
 .game-images {
     display: flex;
-    justify-content: space-between;
-    margin-top: 1rem;
-}
-
-.main-image {
-    width: 48%;
-    margin-right: 2%;
-}
-
-.secondary-images {
-    width: 48%;
-    display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
 }
 
 .game-image {
     max-width: 100%;
     height: auto;
+    display: block;
+    margin: 0 auto;
     border-radius: 5px;
-    transition: transform 0.3s ease;
-}
-
-.secondary-images .game-image {
-    margin-bottom: 1rem;
-}
-
-.secondary-images .game-image:last-child {
-    margin-bottom: 0;
-}
-
-.game-image:hover {
-    transform: scale(1.05);
 }
 
 /* Responsive design for smaller screens */
@@ -218,46 +203,7 @@ h1 {
     transition: background-color 0.3s ease;
     cursor: pointer;
 }
-.game-card {
-    background-color: var(--primary-color);
-    padding: 1.5rem;
-    border-radius: 5px;
-    max-width: 1000px;  /* Increased to accommodate three images */
-    width: 100%;
-    margin: 0 auto;
-}
 
-.game-images {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 1rem;
-}
-
-.main-image {
-    width: 48%;  /* Slightly less than 50% to allow for spacing */
-    margin-right: 2%;
-}
-
-.secondary-images {
-    width: 48%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.game-image {
-    border-radius: 5px;
-    transition: transform 0.3s ease;
-}
-
-.secondary-images .game-image {
-    width: 100%;
-    margin-bottom: 1rem;
-}
-
-.secondary-images .game-image:last-child {
-    margin-bottom: 0;
-}
 .form-container {
     display: flex;
     justify-content: center;
@@ -339,19 +285,10 @@ h2 {
 }
 
 .game-showcase {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
-
-.game-card {
-    background-color: var(--primary-color);
-    padding: 1.5rem;
-    border-radius: 5px;
-    max-width: 600px;
-    width: 100%;
-    margin: 0 auto;
+    display: flex; /* Ensures horizontal alignment */
+    gap: 20px; /* Adds spacing between panels */
+    justify-content: space-between; /* Distributes space evenly */
+    align-items: flex-start; /* Aligns items at the top */
 }
 
 .game-card img {
@@ -431,6 +368,15 @@ footer {
     .nav-active {
         transform: translateX(0%);
     }
+
+    .game-showcase {
+        flex-direction: column; /* Stacks panels vertically */
+        gap: 20px; /* Adds spacing between stacked panels */
+    }
+
+    .game-card {
+        max-width: 100%; /* Allows the card to take full width */
+    }
 }
 
 @keyframes navLinkFade {
@@ -476,4 +422,33 @@ main {
 nav {
     /* ... existing styles ... */
     z-index: 1000;
+}
+
+.game-images {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.game-images .main-image {
+    width: 70%;
+    height: auto;
+    margin: 0 auto;
+    display: block;
+}
+
+.game-images .secondary-images {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.game-images .secondary-images .game-image {
+    width: 150%;
+    height: auto;
+    margin: 0 auto;
+    display: block;
 }
