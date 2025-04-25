@@ -42,11 +42,12 @@ body {
     gap: 20px;
     justify-content: space-between;
     align-items: flex-start;
+    flex-wrap: wrap; /* Ensures cards wrap on smaller screens */
 }
 
 .game-card {
     flex: 1;
-    max-width: 36%; /* Adjusted to fit three boxes */
+    max-width: 30%; /* Makes the cards 20% thinner */
     background-color: var(--primary-color);
     padding: 1.5rem;
     border-radius: 5px;
@@ -66,6 +67,23 @@ body {
     display: block;
     margin: 0 auto;
     border-radius: 5px;
+}
+
+.main-image {
+    width: 70%; /* Makes the primary image 30% smaller */
+    height: auto;
+}
+
+.secondary-images {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.secondary-images .game-image {
+    width: 150%; /* Makes the secondary images 50% larger */
+    height: auto;
 }
 
 /* Responsive design for smaller screens */
@@ -289,6 +307,7 @@ h2 {
     gap: 20px; /* Adds spacing between panels */
     justify-content: space-between; /* Distributes space evenly */
     align-items: flex-start; /* Aligns items at the top */
+    flex-wrap: wrap; /* Ensures cards wrap on smaller screens */
 }
 
 .game-card img {
