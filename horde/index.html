@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mark My Hordes</title>
+  <!-- Fonts loaded inline to avoid cross-origin issues in itch.io iframe -->
+  <style>
+    /* System font fallbacks for Fredoka and Nunito */
+    @font-face { font-family: 'Fredoka'; font-style: normal; font-weight: 400 700; src: local('Fredoka'), local('Nunito'); }
+    @font-face { font-family: 'Nunito'; font-style: normal; font-weight: 400 800; src: local('Nunito'), local('Segoe UI'); }
+  </style>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0f1a0a;
+      color: #d4c8a0;
+      font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+    }
+    #game-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    #hud-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* ─── HERO SELECT BAR (bottom) ──────────────────────── */
+    #hero-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      padding: 8px 16px;
+      background: rgba(27, 16, 64, 0.96);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-top: 3px solid #FF6B9D;
+      display: none;
+      pointer-events: all;
+      z-index: 20;
+    }
+    #hero-bar .hero-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+      justify-content: center;
+    }
+    .hero-slot {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 3px solid #3D2070;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-width: 180px;
+      position: relative;
+    }
+    .hero-slot:hover { border-color: #6CC4FF; background: rgba(108,196,255,0.08); }
+    .hero-slot.active {
+      border-color: #FFD93D;
+      background: rgba(255,217,61,0.12);
+      box-shadow: 0 0 12px rgba(255,217,61,0.3), inset 0 0 12px rgba(255,217,61,0.08);
+    }
+    .hero-slot.dead {
+      opacity: 0.45;
+      pointer-events: none;
+      background: rgba(255, 80, 80, 0.08);
+      border-color: rgba(255, 80, 80, 0.3);
+    }
+    .hero-slot.dead .hero-name {
+      text-decoration: line-through;
+      color: #FF6B6B;
+    }
+    .hero-slot .hotkey {
+      position: absolute;
+      top: -8px;
+      left: -8px;
+      width: 22px;
+      height: 22px;
+      background: linear-gradient(135deg, #FF6B9D, #C98FFF);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fredoka', sans-serif;
+    }
+    .hero-slot .hero-icon { font-size: 24px; line-height: 1; }
+    .hero-slot .hero-info { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+    .hero-slot .hero-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #f0e8ff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+    .hero-slot .hero-class { font-size: 10px; color: #8B6DB0; }
+    .hero-slot .hero-companion { font-size: 10px; color: #C98FFF; }
+    .hero-slot .hero-hp-bar {
+      width: 100%;
+      height: 5px;
+      background: #2A1858;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 2px;
+    }
+    .hero-slot .hero-hp-fill {
+      height: 100%;
+      background: #45E6B0;
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+    .hero-slot .hero-hp-fill.low { background: #FF6B6B; }
+    .hero-slot .hero-hp-fill.mid { background: #FFD93D; }
+
+    /* Ability bar (shows for selected hero) */
+    .ability-bar {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 6px;
+    }
+    .ability-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      background: rgba(201, 143, 255, 0.12);
+      border: 2px solid #4A2580;
+      border-radius: 10px;
+      cursor: pointer;
+      pointer-events: all;
+      transition: all 0.2s ease;
+      min-width: 120px;
+    }
+    .ability-btn:hover { border-color: #C98FFF; background: rgba(201, 143, 255, 0.2); }
+    .ability-btn:not(.on-cooldown) {
+      animation: ability-pulse 2.5s ease-in-out infinite;
+    }
+    .ability-btn.on-cooldown { opacity: 0.5; cursor: default; }
+    .ability-btn .ability-key {
+      background: rgba(201, 143, 255, 0.5);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-family: 'Fredoka', sans-serif;
+    }
+    .ability-btn .ability-name { font-size: 11px; color: #C98FFF; font-weight: 700; }
+    .ability-btn .ability-cd { font-size: 11px; font-weight: 800; margin-left: auto; }
+    .ability-btn .ability-cd.ready { color: #45E6B0; }
+    .ability-btn .ability-cd.cooldown { color: #FF9F43; }
+
+    /* Voice indicator */
+    .voice-section {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 3px solid #3D2070;
+      border-radius: 12px;
+      margin-left: auto;
+      transition: all 0.2s;
+    }
+    .voice-section.listening {
+      border-color: #FF6B6B;
+      background: rgba(255,70,70,0.2);
+      box-shadow: 0 0 16px rgba(255,107,107,0.3);
+      animation: voice-pulse 0.8s infinite;
+    }
+    .voice-section .voice-label {
+      font-size: 11px;
+      color: #8B6DB0;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .voice-section.listening .voice-label {
+      color: #FF6B6B;
+    }
+    @keyframes voice-pulse {
+      0%, 100% { box-shadow: 0 0 8px rgba(255,107,107,0.2); }
+      50% { box-shadow: 0 0 20px rgba(255,107,107,0.5); }
+    }
+    .voice-transcript {
+      font-size: 12px;
+      color: #FFD93D;
+      font-weight: 600;
+      max-width: 250px;
+      white-space: normal;
+      word-wrap: break-word;
+      line-height: 1.3;
+    }
+
+    /* ─── COMMAND LOG ──────────────────────────────────── */
+    #command-log {
+      position: absolute;
+      bottom: 120px;
+      left: 16px;
+      width: 350px;
+      max-height: 180px;
+      overflow-y: auto;
+      background: rgba(27, 16, 64, 0.88);
+      border: 2px solid #3D2070;
+      border-radius: 14px;
+      padding: 8px 12px;
+      font-size: 12px;
+      pointer-events: all;
+      display: none;
+      z-index: 20;
+      scrollbar-gutter: stable;
+      mask-image: linear-gradient(to bottom, transparent 0%, #000 15%, #000 100%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 15%, #000 100%);
+    }
+    #command-log .log-entry {
+      margin-bottom: 4px;
+      padding: 5px 8px;
+      border-bottom: 1px solid #2A1858;
+      border-left: 2px solid rgba(201, 143, 255, 0.3);
+      transition: background 0.2s ease;
+    }
+    #command-log .log-entry .player { color: #6CC4FF; font-weight: 700; }
+    #command-log .log-entry .text { color: #cbb8ee; }
+    #command-log .log-entry .result { color: #5DFFC4; font-size: 11px; font-weight: 600; }
+
+    /* ─── STATUS BAR ──────────────────────────────────── */
+    #status-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 8px 12px;
+      background: rgba(27, 16, 64, 0.92);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-bottom: 2px solid #3D2070;
+      display: none;
+      pointer-events: all;
+      z-index: 20;
+      font-size: 13px;
+    }
+    #status-bar .team-section {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    #status-bar .char-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.06);
+      border: 2px solid #3D2070;
+      min-width: 170px;
+      transition: all 0.2s ease;
+    }
+    #status-bar .char-card.dead { opacity: 0.4; }
+    #status-bar .char-card.ally { border-left: 3px solid #6CC4FF; }
+    #status-bar .char-card.enemy { border-left: 3px solid #FF6B6B; }
+    #status-bar .char-info { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+    #status-bar .char-name { font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #status-bar .char-class { font-size: 10px; color: #8B6DB0; }
+    #status-bar .char-hp-row { display: flex; align-items: center; gap: 6px; }
+    #status-bar .hp-bar {
+      flex: 1;
+      height: 6px;
+      background: #2A1858;
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1px solid #3D2070;
+    }
+    #status-bar .hp-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+    #status-bar .hp-fill.ally { background: #45E6B0; }
+    #status-bar .hp-fill.enemy { background: #FF6B6B; }
+    #status-bar .hp-text { font-size: 10px; color: #cbb8ee; min-width: 50px; text-align: right; }
+    #status-bar .char-ability-row { display: flex; align-items: center; gap: 6px; margin-top: 1px; }
+    #status-bar .ability-name { font-size: 10px; color: #C98FFF; font-weight: 600; white-space: nowrap; }
+    #status-bar .ability-cd { font-size: 10px; font-weight: 700; }
+    #status-bar .ability-cd.ready { color: #45E6B0; }
+    #status-bar .ability-cd.on-cd { color: #FF9F43; }
+    #status-bar .char-effects { display: flex; gap: 4px; margin-top: 1px; }
+    #status-bar .effect-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 0 4px;
+      border-radius: 3px;
+      background: rgba(0,0,0,0.3);
+    }
+    #status-bar .char-order { font-size: 10px; color: #FFD93D; font-weight: 600; }
+    #status-bar .char-flag { color: #FFD93D; font-size: 10px; font-weight: 700; }
+    #status-bar .char-xp-row { display: flex; align-items: center; gap: 4px; margin: 1px 0; }
+    #status-bar .xp-bar {
+      flex: 1; height: 3px; background: rgba(0,0,0,0.4); border-radius: 2px; overflow: hidden;
+    }
+    #status-bar .xp-fill {
+      height: 100%; background: linear-gradient(90deg, #FFD93D, #FF9F43); border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    #status-bar .xp-text { font-size: 8px; color: #FFD93D; white-space: nowrap; }
+    #status-bar .char-inventory {
+      display: flex; gap: 3px; flex-wrap: wrap; margin: 1px 0;
+    }
+    #status-bar .inv-item {
+      font-size: 9px; color: #FF9F43; background: rgba(255,159,67,0.15);
+      padding: 1px 4px; border-radius: 3px; border: 1px solid rgba(255,159,67,0.3);
+      cursor: help;
+    }
+    #status-bar .char-channel { margin: 2px 0; }
+    #status-bar .channel-bar {
+      height: 4px; background: rgba(0,0,0,0.4); border-radius: 2px; overflow: hidden;
+    }
+    #status-bar .channel-fill {
+      height: 100%; background: linear-gradient(90deg, #6CC4FF, #45E6B0); border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    .processing-indicator {
+      color: #FFD93D;
+      font-style: italic;
+      font-weight: 600;
+      padding: 4px 0;
+    }
+
+    /* ─── ABILITY PANEL (right sidebar) ────────────────── */
+    #ability-panel {
+      position: absolute;
+      top: 80px;
+      right: 8px;
+      width: 225px;
+      background: rgba(27, 16, 64, 0.94);
+      border: 3px solid #3D2070;
+      border-radius: 16px;
+      padding: 12px;
+      pointer-events: all;
+      display: none;
+      z-index: 20;
+      font-family: 'Nunito', sans-serif;
+      max-height: calc(100vh - 180px);
+      overflow-y: auto;
+      scrollbar-gutter: stable;
+    }
+    #ability-panel h3 {
+      font-size: 12px;
+      color: #FF6B9D;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin: 0 0 8px 0;
+      border-bottom: 2px solid #3D2070;
+      padding-bottom: 6px;
+      font-family: 'Fredoka', sans-serif;
+    }
+    .ap-char {
+      margin-bottom: 10px;
+      padding: 8px 10px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 10px;
+      border-left: 4px solid #FF6B9D;
+    }
+    .ap-char.enemy { border-left-color: #FF6B6B; }
+    .ap-char-name { font-size: 13px; font-weight: 700; color: #f0e8ff; }
+    .ap-char-class { font-size: 11px; color: #8B6DB0; }
+    .ap-ability {
+      margin-top: 4px;
+      padding: 4px 8px;
+      background: rgba(255, 107, 157, 0.1);
+      border-radius: 8px;
+      font-size: 11px;
+    }
+    .ap-ability.selected {
+      background: rgba(201, 143, 255, 0.2);
+      border: 1px solid rgba(201, 143, 255, 0.4);
+    }
+    .ap-hotkey {
+      display: inline-block;
+      background: rgba(201, 143, 255, 0.4);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1px 4px;
+      border-radius: 3px;
+      margin-right: 2px;
+    }
+    .ap-ability-name { color: #C98FFF; font-weight: 700; }
+    .ap-ability-desc { color: #8B6DB0; font-size: 10px; }
+    .ap-ability-cd { font-size: 10px; font-weight: 700; }
+    .ap-ability-cd.ready { color: #45E6B0; }
+    .ap-ability-cd.cooldown { color: #FF9F43; }
+    .ap-order { margin-top: 4px; font-size: 11px; }
+    .ap-order-current { color: #FFD93D; font-weight: 700; }
+    .ap-order-queued { color: #8B6DB0; font-size: 10px; padding-left: 8px; }
+    .ap-effects { margin-top: 2px; font-size: 10px; }
+
+    /* ─── CUSTOM SCROLLBARS ────────────────────────────── */
+    #command-log::-webkit-scrollbar,
+    #ability-panel::-webkit-scrollbar {
+      width: 5px;
+    }
+    #command-log::-webkit-scrollbar-track,
+    #ability-panel::-webkit-scrollbar-track {
+      background: rgba(42, 24, 88, 0.4);
+      border-radius: 3px;
+    }
+    #command-log::-webkit-scrollbar-thumb,
+    #ability-panel::-webkit-scrollbar-thumb {
+      background: rgba(201, 143, 255, 0.35);
+      border-radius: 3px;
+    }
+    #command-log::-webkit-scrollbar-thumb:hover,
+    #ability-panel::-webkit-scrollbar-thumb:hover {
+      background: rgba(201, 143, 255, 0.55);
+    }
+    #command-log,
+    #ability-panel {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(201, 143, 255, 0.35) rgba(42, 24, 88, 0.4);
+    }
+
+    /* ─── PULSE ANIMATION (ability ready) ─────────────── */
+    @keyframes ability-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(201, 143, 255, 0); }
+      50% { box-shadow: 0 0 8px 2px rgba(201, 143, 255, 0.25); }
+    }
+
+    /* ─── HORDE MODE RESPONSIVE PANELS ──────────────────── */
+    #game-container {
+      --horde-sidebar-w: clamp(200px, 17vw, 300px);
+      --horde-rpanel-w: clamp(260px, 23vw, 400px);
+    }
+
+    #horde-sidebar,
+    #horde-char-panel {
+      transition: width 0.25s ease;
+    }
+
+    #horde-sidebar::-webkit-scrollbar,
+    #horde-char-panel::-webkit-scrollbar {
+      width: 5px;
+    }
+    #horde-sidebar::-webkit-scrollbar-track,
+    #horde-char-panel::-webkit-scrollbar-track {
+      background: rgba(139,115,85,0.15);
+      border-radius: 3px;
+    }
+    #horde-sidebar::-webkit-scrollbar-thumb,
+    #horde-char-panel::-webkit-scrollbar-thumb {
+      background: rgba(139,115,85,0.4);
+      border-radius: 3px;
+    }
+    #horde-sidebar::-webkit-scrollbar-thumb:hover,
+    #horde-char-panel::-webkit-scrollbar-thumb:hover {
+      background: rgba(139,115,85,0.6);
+    }
+
+    /* On small screens, shrink font sizes inside panels */
+    @media (max-width: 1200px) {
+      #horde-sidebar { font-size: 12px; }
+      #horde-char-panel { font-size: 12px; }
+    }
+    @media (max-width: 900px) {
+      #horde-sidebar { font-size: 11px; }
+      #horde-char-panel { font-size: 11px; }
+    }
+  </style>
+  
+
+  <script>
+    window.__gameStarted = false;
+    window.onerror = function(msg, src, line, col, err) {
+      var d = document.createElement('div');
+      d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:red;color:white;padding:12px;font:14px monospace;z-index:99999;white-space:pre-wrap';
+      d.textContent = 'ERROR: ' + msg + '\n' + (src||'') + ':' + line + ':' + col + '\n' + (err&&err.stack||'');
+      document.body.appendChild(d);
+    };
+    window.addEventListener('unhandledrejection', function(e) {
+      var d = document.createElement('div');
+      d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:red;color:white;padding:12px;font:14px monospace;z-index:99999;white-space:pre-wrap';
+      d.textContent = 'UNHANDLED PROMISE: ' + (e.reason&&e.reason.stack||e.reason||'unknown');
+      document.body.appendChild(d);
+    });
+    setTimeout(function() {
+      if (!window.__gameStarted) {
+        var d = document.createElement('div');
+        d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:orange;color:black;padding:12px;font:14px monospace;z-index:99999';
+        d.textContent = 'WARNING: Game has not started after 10s. Check console (F12).';
+        document.body.appendChild(d);
+      }
+    }, 10000);
+  </script>
+</head>
+<body>
+  <div id="game-container">
+    <div id="hud-overlay">
+      <div id="status-bar"></div>
+      <div id="ability-panel"></div>
+      <div id="command-log"></div>
+    </div>
+    <div id="hero-bar">
+      <div class="hero-row" id="hero-row"></div>
+      <div class="ability-bar" id="ability-bar"></div>
+    </div>
+  </div>
+<script src="./game.js"></script>
+</body>
+</html>
